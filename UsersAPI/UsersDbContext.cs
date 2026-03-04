@@ -12,5 +12,6 @@ namespace UsersAPI
         public DbSet<UsersAPI.Models.Department> Departments { get; set; }
         public DbSet<UsersAPI.Models.Specialization> Specializations { get; set; }
         public DbSet<UsersAPI.Models.DoctorSpecialization> DoctorsSpecializations { get; set; }
+        public DbSet<UsersAPI.Models.MinesweeperGame> MinesweeperGames { get; set; }
     }
 }
