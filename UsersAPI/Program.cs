@@ -10,6 +10,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<UsersDbContext>(options =>
 {
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
+    options.EnableSensitiveDataLogging(false);
+    options.UseLoggerFactory(LoggerFactory.Create(b => b.SetMinimumLevel(LogLevel.Warning)));
 });
 builder.Services.AddScoped<UserService>();
 

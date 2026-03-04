@@ -35,10 +35,10 @@ namespace UsersAPI.Controllers
                 Rows = rows,
                 Cols = cols,
                 MinesCount = mines,
-                MinesJson = JsonSerializer.Serialize(minesList),
+                MinesJson = "[]",
                 OpenedJson = "[]",
                 FlagsJson = "[]",
-                Status = "playing"
+                Status = "waiting"
             };
 
             _ctx.MinesweeperGames.Add(game);
@@ -51,6 +51,33 @@ namespace UsersAPI.Controllers
         {
             var game = await _ctx.MinesweeperGames.FirstOrDefaultAsync(g => g.Code == code);
             if (game == null) return NotFound();
+
+            if (game.Status == "waiting")
+            {
+                var rnd = new Random();
+
+                var forbidden = new HashSet<string>();
+                for (int dr = -1; dr <= 1; dr++)
+                    for (int dc = -1; dc <= 1; dc++)
+                    {
+                        int nr = req.Row + dr, nc = req.Col + dc;
+                        if (nr >= 0 && nr < game.Rows && nc >= 0 && nc < game.Cols)
+                            forbidden.Add($"{nr},{nc}");
+                    }
+
+                var available = new List<int[]>();
+                for (int r = 0; r < game.Rows; r++)
+                    for (int c = 0; c < game.Cols; c++)
+                        if (!forbidden.Contains($"{r},{c}"))
+                            available.Add(new[] { r, c });
+
+                if (available.Count < game.MinesCount)
+                    return BadRequest("Замало місця для мін");
+
+                var minesList = available.OrderBy(_ => rnd.Next()).Take(game.MinesCount).ToList();
+                game.MinesJson = JsonSerializer.Serialize(minesList);
+                game.Status = "playing";
+            }
             if (game.Status != "playing") return BadRequest("Гра вже завершена");
 
             var mines = JsonSerializer.Deserialize<List<int[]>>(game.MinesJson)!;
@@ -134,7 +161,7 @@ namespace UsersAPI.Controllers
         {
             var game = await _ctx.MinesweeperGames.FirstOrDefaultAsync(g => g.Code == code);
             if (game == null) return NotFound();
-            if (game.Status != "playing") return BadRequest("Гра вже завершена");
+            if (game.Status != "playing" && game.Status != "waiting") return BadRequest("Гра вже завершена");
 
             var flags = JsonSerializer.Deserialize<List<int[]>>(game.FlagsJson)!;
             var existing = flags.FirstOrDefault(f => f[0] == req.Row && f[1] == req.Col);
@@ -193,19 +220,9 @@ namespace UsersAPI.Controllers
                 .OrderByDescending(g => g.CreatedAt)
                 .Skip((page - 1) * size)
                 .Take(size)
-                .Select(g => new {
-                    g.Id,
-                    g.Code,
-                    g.Rows,
-                    g.Cols,
-                    g.MinesCount,
-                    g.Status,
-                    g.CreatedAt,
-                    g.FinishedAt
-                })
                 .ToListAsync();
 
-            return Ok(new
+            return Ok(new PagedResult<MinesweeperGame>
             {
                 Items = items,
                 TotalCount = total,
