@@ -9,9 +9,11 @@ namespace UsersAPI.Controllers
     public class UsersController: ControllerBase
     {
         private readonly UserService _userService;
-        public UsersController(UserService userService)
+        private readonly TokenService _tokenService;
+        public UsersController(UserService userService, TokenService tokenService)
         {
             _userService = userService;
+            _tokenService = tokenService;
         }
 
         [HttpGet]
@@ -41,6 +43,22 @@ namespace UsersAPI.Controllers
         {
             _userService.Add(user);
             return Ok();
+        }
+
+        [HttpPost("register")]
+        public ActionResult RegisterUser([FromBody] User user)
+        {
+            _userService.RegisterUser(user);
+            return Ok();
+        }
+        [HttpPost("login")]
+        public ActionResult LoginUser([FromBody] UserLoginDTO credentials)
+        {
+            var user = _userService.Validate(credentials);
+            if (user == null)
+                return Unauthorized();
+            var token = _tokenService.GenerateToken(user);
+            return Ok(token);
         }
     }
 }
