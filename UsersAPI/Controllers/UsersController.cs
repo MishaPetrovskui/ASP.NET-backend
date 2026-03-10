@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using UsersAPI.Services;
 using UsersAPI.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace UsersAPI.Controllers
 {
@@ -20,6 +21,12 @@ namespace UsersAPI.Controllers
         public ActionResult<List<User>> GetUsers()
         {
             return Ok(_userService.GetAll());
+        }
+        [Authorize]
+        [HttpGet("me")]
+        public ActionResult<List<User>> GetMe()
+        {
+            return Ok();
         }
 
         [HttpGet("paged/{page?}")]
