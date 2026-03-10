@@ -49,7 +49,7 @@ builder.Services.AddSwaggerGen(option =>
             },
             new string[] {}
         }
-    });
+    }   );
 });
 builder.Services.AddDbContext<UsersDbContext>(options =>
 {
