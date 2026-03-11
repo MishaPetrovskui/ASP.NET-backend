@@ -2,6 +2,7 @@
 using UsersAPI.Services;
 using UsersAPI.Models;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace UsersAPI.Controllers
 {
@@ -16,17 +17,27 @@ namespace UsersAPI.Controllers
             _userService = userService;
             _tokenService = tokenService;
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public ActionResult<List<User>> GetUsers()
         {
             return Ok(_userService.GetAll());
         }
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}")]
+        public ActionResult UpdateUser(int id, [FromBody] User user)
+        {
+            user.Id = id;
+            _userService.Update(user);
+            return Ok();
+        }
         [Authorize]
         [HttpGet("me")]
         public ActionResult<List<User>> GetMe()
         {
-            return Ok();
+            string NameIdentifier = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int id = Convert.ToInt32(NameIdentifier);
+            return Ok(_userService.GetUserById(id));
         }
 
         [HttpGet("paged/{page?}")]

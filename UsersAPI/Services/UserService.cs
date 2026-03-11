@@ -12,6 +12,7 @@ namespace UsersAPI.Services
         }
 
         public List<User> GetAll() => _context.Users.ToList();
+        public User? GetUserById(int id) => _context.Users.FirstOrDefault(u => u.Id == id);
         public void Add(User user)
         {
             _context.Users.Add(user);
@@ -33,5 +34,17 @@ namespace UsersAPI.Services
                 return null;
             return user;
         }
+        public void Update(User user)
+        {
+            var existing = _context.Users.Find(user.Id);
+            if (existing == null) return;
+            existing.Name = user.Name;
+            existing.Email = user.Email;
+            existing.Birthday = user.Birthday;
+            existing.Gender = user.Gender;
+            existing.Role = user.Role;
+            _context.SaveChanges();
+        }
+
     }
 }
